@@ -1,0 +1,30 @@
+{
+  "orchestrator_engine": "CDMX_v2.4",
+  "triggers": [
+    {
+      "variable": "budget",
+      "condition": "<= 20% remaining threshold",
+      "adjustment": {
+        "transportation": "Terminate Uber usage. Reroute entirely to Metrobus (6 MXN/ride).",
+        "gastronomy": "Lock out all brick-and-mortar restaurants. Restrict caloric intake to street-level 'puestos' (stands) outside Metro Chilpancingo.",
+        "workspace": "Abandon specialty coffee shops. Utilize free CDMX public Wi-Fi in Parque México."
+      }
+    },
+    {
+      "variable": "weather",
+      "condition": "AQI (Air Quality Index) > 150 OR Torrential Rain",
+      "adjustment": {
+        "itinerary": "Cancel Tlatelolco and UNAM outdoor excursions.",
+        "failsafe_activation": "Reroute to underground/sealed environments. Deploy to Cineteca Nacional (Rojkind Arquitectos) for indoor brutalist aesthetics and climate-controlled deep work cafes."
+      }
+    },
+    {
+      "variable": "workload",
+      "condition": "Unexpected Client Emergency / Sev-1 Outage",
+      "adjustment": {
+        "itinerary": "Abort current leisure track immediately.",
+        "logistics": "Deploy to nearest Selina Co-working hub or WeWork via Uber Black for guaranteed gigabit speeds and soundproof booths. Order sustenance via Rappi to maintain zero-interruption state."
+      }
+    }
+  ]
+}

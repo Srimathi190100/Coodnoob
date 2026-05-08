@@ -1,0 +1,43 @@
+{
+  "orchestrator_engine": "NomadParis_v1.0",
+  "location": "Paris, France",
+  "triggers": [
+    {
+      "variable": "budget",
+      "condition": "<= 20% remaining threshold",
+      "adjustment": {
+        "transportation": "Switch to RATP Metro/Bus. Avoid G7 and Uber.",
+        "gastronomy": "Restrict to Boulangeries (sandwiches/quiches). Suggest picnic at Square du Vert-Galant.",
+        "workspace": "Transition to public libraries (Bibliothèque Sainte-Geneviève).",
+        "google_services": {
+          "maps_navigation": "https://www.google.com/maps/dir/?api=1&destination=Bibliotheque+Sainte-Genevieve,Paris&travelmode=transit",
+          "search_query": "cheap boulangeries near me in Paris"
+        }
+      }
+    },
+    {
+      "variable": "weather",
+      "condition": "Rain OR AQI > 100",
+      "adjustment": {
+        "itinerary": "Cancel Montmartre outdoor walking tour.",
+        "failsafe_activation": "Deploy to 'Passages Couverts' or Musée d'Orsay.",
+        "google_services": {
+          "maps_navigation": "https://www.google.com/maps/dir/?api=1&destination=Passage+des+Panoramas,Paris&travelmode=walking",
+          "search_query": "best indoor museums Paris rain"
+        }
+      }
+    },
+    {
+      "variable": "workload",
+      "condition": "High Workload / Emergency",
+      "adjustment": {
+        "itinerary": "Suspend leisure activities immediately.",
+        "logistics": "Relocate to Station F or Anticafé.",
+        "google_services": {
+          "maps_navigation": "https://www.google.com/maps/dir/?api=1&destination=Station+F,Paris&travelmode=driving",
+          "search_query": "quiet coworking spaces Paris open now"
+        }
+      }
+    }
+  ]
+}
