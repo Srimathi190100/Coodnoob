@@ -15,7 +15,7 @@ logger = logging.getLogger("NomadParis")
 app = FastAPI(
     title="NomadParis: The Definitive Agentic Hub",
     description="Full-stack, multi-lingual, agentic travel engine for Paris.",
-    version="2.3.0"
+    version="2.4.0"
 )
 
 # --- IN-MEMORY DATABASE (SIMULATED FIRESTORE) ---
@@ -37,7 +37,7 @@ async def orchestrate(state: NomadState):
     adjustments = get_adjustments(state)
     return {"active_adjustments": adjustments}
 
-# --- THE DEFINITIVE DASHBOARD ---
+# --- THE REFINED DASHBOARD (v2.4.0) ---
 
 def get_dashboard_html() -> str:
     return """
@@ -55,15 +55,21 @@ def get_dashboard_html() -> str:
                 --text: #FDFCFB; --text-muted: #94a3b8; --success: #4ade80; --error: #f87171;
             }
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+            body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; cursor: crosshair; }
             
             /* Navbar */
             .navbar { padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; }
             .logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
             
             .lang-switcher { display: flex; gap: 0.5rem; }
-            .lang-btn { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 0.3rem 0.6rem; border-radius: 0.4rem; cursor: pointer; font-size: 0.7rem; transition: 0.3s; }
+            .lang-btn { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 0.3rem 0.6rem; border-radius: 0.4rem; cursor: pointer; font-size: 0.7rem; transition: 0.3s; position: relative; overflow: hidden; }
             .lang-btn.active { background: var(--primary); color: var(--bg); border-color: var(--primary); }
+
+            /* Click Feedback (Ripple) */
+            .ripple { position: absolute; border-radius: 50%; transform: scale(0); animation: ripple 0.6s linear; background: rgba(255, 255, 255, 0.3); pointer-events: none; }
+            @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+            .clicked-highlight { border-color: var(--primary) !important; box-shadow: 0 0 15px var(--primary) !important; }
 
             /* Grid Layout */
             .container { padding: 2rem 5%; display: grid; grid-template-columns: 380px 1fr 380px; gap: 2rem; max-width: 1800px; margin: 0 auto; width: 100%; }
@@ -74,7 +80,7 @@ def get_dashboard_html() -> str:
             h2 span { font-size: 0.6rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; background: rgba(212,175,55,0.1); padding: 0.2rem 0.5rem; border-radius: 1rem; }
 
             /* Interactive Components */
-            .btn-action { width: 100%; padding: 0.8rem; background: var(--primary); color: var(--bg); border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 1rem; font-size: 0.8rem; }
+            .btn-action { width: 100%; padding: 0.8rem; background: var(--primary); color: var(--bg); border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 1rem; font-size: 0.8rem; position: relative; overflow: hidden; }
             .btn-action:hover { background: #b8962e; transform: translateY(-2px); }
             
             .control-group { margin-bottom: 1.2rem; }
@@ -82,43 +88,41 @@ def get_dashboard_html() -> str:
             input[type="range"] { width: 100%; accent-color: var(--primary); }
 
             .hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
-            .hub-item { background: var(--glass); border-radius: 0.75rem; padding: 0.8rem; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.3s; font-size: 0.8rem; }
+            .hub-item { background: var(--glass); border-radius: 0.75rem; padding: 0.8rem; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.3s; font-size: 0.8rem; position: relative; overflow: hidden; }
             .hub-item:hover { border-color: var(--primary); background: rgba(212, 175, 55, 0.05); }
 
             .map-container { width: 100%; height: 200px; border-radius: 1rem; overflow: hidden; margin: 1rem 0; border: 1px solid rgba(255,255,255,0.1); filter: grayscale(1) invert(0.9); }
             
             .log-console { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--success); height: 180px; overflow-y: auto; background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.05); }
             .log-entry { margin-bottom: 0.3rem; opacity: 0.8; }
-            .log-entry.error { color: var(--error); }
-            .log-entry.action { color: var(--accent); }
+            
+            /* Google Sync Simulation Overlay */
+            .sync-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px); }
+            .sync-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; margin-bottom: 1rem; }
+            @keyframes spin { to { transform: rotate(360deg); } }
 
-            .wallet-item { padding: 0.6rem; background: rgba(74, 222, 128, 0.05); border-left: 2px solid var(--success); border-radius: 0.4rem; font-size: 0.7rem; margin-bottom: 0.5rem; animation: fadeIn 0.3s ease; }
-            @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-
-            /* Google Agent */
-            .agent-bubble { position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 2000; transition: 0.3s; }
-            .agent-panel { position: fixed; bottom: 6.5rem; right: 2rem; width: 350px; background: #0a0a0a; border: 1px solid var(--primary); border-radius: 1.5rem; padding: 1.5rem; display: none; z-index: 2000; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-            .agent-panel.active { display: block; animation: slideUp 0.3s ease; }
-            @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-            .suggestion-card { background: var(--glass); border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; border-left: 3px solid var(--accent); }
-
-            @media (max-width: 1200px) { .container { grid-template-columns: 1fr; } .agent-panel { width: calc(100% - 4rem); left: 2rem; } }
+            @media (max-width: 1200px) { .container { grid-template-columns: 1fr; } }
         </style>
     </head>
-    <body>
+    <body onclick="createGlobalRipple(event)">
+        <div class="sync-overlay" id="syncOverlay">
+            <div class="sync-spinner"></div>
+            <p style="font-family: 'Playfair Display'; font-size: 1.2rem;" id="syncStatus">Connecting to Google Cloud...</p>
+            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">Authenticating via Firebase Auth...</p>
+        </div>
+
         <nav class="navbar">
             <a href="/" class="logo">NomadParis</a>
             <div class="lang-switcher">
-                <button id="btn-en" class="lang-btn active" onclick="setLang('en')">EN</button>
-                <button id="btn-fr" class="lang-btn" onclick="setLang('fr')">FR</button>
-                <button id="btn-es" class="lang-btn" onclick="setLang('es')">ES</button>
+                <button id="btn-en" class="lang-btn active" onclick="setLang('en', event)">EN</button>
+                <button id="btn-fr" class="lang-btn" onclick="setLang('fr', event)">FR</button>
+                <button id="btn-es" class="lang-btn" onclick="setLang('es', event)">ES</button>
             </div>
         </nav>
 
         <main class="container">
-            <!-- LEFT: State & Hub -->
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                <section class="panel">
+                <section class="panel" id="panel-cockpit">
                     <h2 id="title-cockpit">Nomad Cockpit <span>Live</span></h2>
                     <div class="control-group">
                         <label id="lbl-budget">Budget Remaining: <span id="budgetVal">85</span>%</label>
@@ -126,23 +130,22 @@ def get_dashboard_html() -> str:
                     </div>
                     <div class="control-group">
                         <label id="lbl-rain">Environment Override</label>
-                        <button class="btn-action" id="rainBtn" style="background: var(--glass); color: var(--text); margin-top:0;" onclick="toggleRain()">No Rain</button>
+                        <button class="btn-action" id="rainBtn" onclick="toggleRain(event)">No Rain</button>
                     </div>
                 </section>
 
-                <section class="panel">
+                <section class="panel" id="panel-hub">
                     <h2 id="title-hub">Travel Hub <span>Booking</span></h2>
                     <div class="hub-grid">
-                        <div class="hub-item" onclick="showCategory('stay')">🏨 Stay</div>
-                        <div class="hub-item" onclick="showCategory('transit')">🚕 Transit</div>
-                        <div class="hub-item" onclick="showCategory('tickets')">🎟 Tickets</div>
-                        <div class="hub-item" onclick="showCategory('dining')">🍴 Dining</div>
+                        <div class="hub-item" onclick="showCategory('stay', event)">🏨 Stay</div>
+                        <div class="hub-item" onclick="showCategory('transit', event)">🚕 Transit</div>
+                        <div class="hub-item" onclick="showCategory('tickets', event)">🎟 Tickets</div>
+                        <div class="hub-item" onclick="showCategory('dining', event)">🍴 Dining</div>
                     </div>
                     <div id="hubOptions" style="margin-top:1.2rem; font-size: 0.8rem;"></div>
                 </section>
             </div>
 
-            <!-- MIDDLE: Orchestrator -->
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 <section class="panel" style="flex: 1;">
                     <h2 id="title-map">Agentic Monitoring <span>Live Map</span></h2>
@@ -151,18 +154,15 @@ def get_dashboard_html() -> str:
                     </div>
                     <div class="log-console" id="logConsole">
                         <div class="log-entry">[INFO] Engine initializing...</div>
-                        <div class="log-entry">[INFO] Multi-Language Pack Loaded.</div>
                     </div>
-                    <button class="btn-action" id="btn-heal" style="background: var(--error); color: var(--text); border:none;" onclick="simulateConflict()">Simulate Louvre Conflict</button>
+                    <button class="btn-action" id="btn-heal" style="background: var(--error); color: var(--text);" onclick="simulateConflict(event)">Simulate Louvre Conflict</button>
                 </section>
-
                 <section class="panel" id="advicePanel" style="display:none;">
                     <h2 id="title-guidance">Engine Guidance <span>Real-time</span></h2>
                     <div id="adviceContent" style="font-size: 0.85rem;"></div>
                 </section>
             </div>
 
-            <!-- RIGHT: Wallet & Profile -->
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 <section class="panel">
                     <h2 id="title-wallet">Nomad Wallet <span>Sync</span></h2>
@@ -170,47 +170,29 @@ def get_dashboard_html() -> str:
                         <p style="text-align: center; font-size: 0.7rem; color: var(--text-muted); margin-top: 2rem;">No bookings yet.</p>
                     </div>
                 </section>
-
                 <section class="panel">
                     <h2 id="title-neural">Neural Weights <span>GCloud</span></h2>
                     <div style="font-size: 0.7rem; display: flex; flex-direction: column; gap: 0.8rem;">
                         <div>
                             <label>Culture Bias</label>
-                            <div style="height:4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top:4px;"><div style="width: 75%; height: 100%; background: var(--primary);"></div></div>
+                            <div style="height:4px; background: rgba(255,255,255,0.1); border-radius: 2px;"><div id="cultureBar" style="width: 75%; height: 100%; background: var(--primary); transition: 1s;"></div></div>
                         </div>
                         <div>
                             <label>Food Bias</label>
-                            <div style="height:4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top:4px;"><div style="width: 40%; height: 100%; background: var(--accent);"></div></div>
+                            <div style="height:4px; background: rgba(255,255,255,0.1); border-radius: 2px;"><div id="foodBar" style="width: 40%; height: 100%; background: var(--accent); transition: 1s;"></div></div>
                         </div>
                     </div>
-                    <button class="btn-action" id="btn-sync">Sync Google Account</button>
+                    <button class="btn-action" id="btn-sync" onclick="startGoogleSync(event)">Sync Google Account</button>
                 </section>
             </div>
         </main>
 
-        <!-- Floating Agent -->
-        <div class="agent-bubble" onclick="toggleAgent()">
-            <svg viewBox="0 0 24 24" width="30" height="30"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-        </div>
-        <div class="agent-panel" id="agentPanel">
-            <h3 style="color: var(--primary); font-family: 'Playfair Display';" id="agent-title">Google AI Suggestion</h3>
-            <div id="agentSuggestions">
-                <div class="suggestion-card">
-                    <h4>Nuage Café (Hidden Gem)</h4>
-                    <p>Quiet focus zone in the 5th arrondissement. 5G speed verified.</p>
-                </div>
-            </div>
-            <button class="btn-action" onclick="toggleAgent()">Close</button>
-        </div>
-
         <script>
             let state = { budget_remaining_pct: 85, aqi: 45, rain: false, high_workload: false, emergency: false };
-            let currentLang = 'en';
-
             const trans = {
-                en: { cockpit: "Nomad Cockpit", hub: "Travel Hub", map: "Agentic Map", wallet: "Nomad Wallet", neural: "Neural Weights", guidance: "Engine Guidance", budget: "Budget Remaining", sync: "Sync Google Account", heal: "Simulate Louvre Conflict", agent: "Google AI Suggestion" },
-                fr: { cockpit: "Poste de Pilotage", hub: "Centre de Voyage", map: "Carte Agentique", wallet: "Portefeuille", neural: "Poids Neuraux", guidance: "Conseils Moteur", budget: "Budget Restant", sync: "Sync Compte Google", heal: "Simuler Conflit Louvre", agent: "Suggestion Google AI" },
-                es: { cockpit: "Cabina de Mando", hub: "Centro de Viajes", map: "Mapa Agéntico", wallet: "Billetera Nomad", neural: "Pesos Neurales", guidance: "Guía del Motor", budget: "Presupuesto Restante", sync: "Sync Cuenta Google", heal: "Simular Conflicto Louvre", agent: "Sugerencia Google AI" }
+                en: { cockpit: "Nomad Cockpit", hub: "Travel Hub", map: "Agentic Map", wallet: "Nomad Wallet", neural: "Neural Weights", guidance: "Engine Guidance", budget: "Budget Remaining", sync: "Sync Google Account", heal: "Simulate Louvre Conflict" },
+                fr: { cockpit: "Poste de Pilotage", hub: "Centre de Voyage", map: "Carte Agentique", wallet: "Portefeuille", neural: "Poids Neuraux", guidance: "Conseils Moteur", budget: "Budget Restant", sync: "Sync Compte Google", heal: "Simuler Conflit Louvre" },
+                es: { cockpit: "Cabina de Mando", hub: "Centro de Viajes", map: "Mapa Agéntico", wallet: "Billetera Nomad", neural: "Pesos Neurales", guidance: "Guía del Motor", budget: "Presupuesto Restante", sync: "Sync Cuenta Google", heal: "Simular Conflicto Louvre" }
             };
 
             const options = {
@@ -220,8 +202,33 @@ def get_dashboard_html() -> str:
                 dining: [{name: "Chez Janou", price: "€45 Avg"}, {name: "Breizh Café", price: "€18 Avg"}]
             };
 
-            function setLang(lang) {
-                currentLang = lang;
+            function createGlobalRipple(e) {
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple';
+                document.body.appendChild(ripple);
+                ripple.style.left = `${e.clientX - 10}px`;
+                ripple.style.top = `${e.clientY - 10}px`;
+                ripple.style.width = ripple.style.height = '20px';
+                setTimeout(() => ripple.remove(), 600);
+            }
+
+            function highlight(el) {
+                el.classList.add('clicked-highlight');
+                setTimeout(() => el.classList.remove('clicked-highlight'), 1000);
+                
+                const rect = el.getBoundingClientRect();
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple';
+                el.appendChild(ripple);
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                setTimeout(() => ripple.remove(), 600);
+            }
+
+            function setLang(lang, e) {
+                highlight(e.target);
                 document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
                 document.getElementById('btn-' + lang).classList.add('active');
                 
@@ -234,7 +241,29 @@ def get_dashboard_html() -> str:
                 document.getElementById('lbl-budget').innerHTML = trans[lang].budget + ': <span id="budgetVal">'+state.budget_remaining_pct+'</span>%';
                 document.getElementById('btn-sync').innerText = trans[lang].sync;
                 document.getElementById('btn-heal').innerText = trans[lang].heal;
-                document.getElementById('agent-title').innerText = trans[lang].agent;
+            }
+
+            async function startGoogleSync(e) {
+                highlight(e.target);
+                const overlay = document.getElementById('syncOverlay');
+                const status = document.getElementById('syncStatus');
+                overlay.style.display = 'flex';
+                
+                await new Promise(r => setTimeout(r, 1500));
+                status.innerText = "Fetching Neural Weights...";
+                await new Promise(r => setTimeout(r, 1500));
+                status.innerText = "Sync Complete!";
+                status.style.color = "var(--success)";
+                
+                document.getElementById('cultureBar').style.width = "95%";
+                document.getElementById('foodBar').style.width = "85%";
+                addLog("Google Sync: Identity & Weights verified.", "success");
+                
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    status.innerText = "Connecting to Google Cloud...";
+                    status.style.color = "white";
+                }, 1000);
             }
 
             function addLog(msg, type='info') {
@@ -242,6 +271,7 @@ def get_dashboard_html() -> str:
                 const time = new Date().toLocaleTimeString([], {hour12: false});
                 const div = document.createElement('div');
                 div.className = `log-entry ${type}`;
+                div.style.color = type === 'success' ? 'var(--success)' : (type === 'error' ? 'var(--error)' : (type === 'action' ? 'var(--accent)' : 'var(--text)'));
                 div.innerText = `[${time}] ${msg}`;
                 console.prepend(div);
             }
@@ -249,17 +279,13 @@ def get_dashboard_html() -> str:
             async function updateState() {
                 state.budget_remaining_pct = parseInt(document.getElementById('budgetRange').value);
                 document.getElementById('budgetVal').innerText = state.budget_remaining_pct;
-                
-                const response = await fetch('/api/orchestrate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(state)
-                });
+                const response = await fetch('/api/orchestrate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(state) });
                 const data = await response.json();
                 renderAdvice(data.active_adjustments);
             }
 
-            function toggleRain() {
+            function toggleRain(e) {
+                highlight(e.target);
                 state.rain = !state.rain;
                 const btn = document.getElementById('rainBtn');
                 btn.innerText = state.rain ? "Rain Detected" : "No Rain";
@@ -275,12 +301,14 @@ def get_dashboard_html() -> str:
                 content.innerHTML = adjustments.map(adj => `<div style="background:rgba(255,255,255,0.03); padding:0.8rem; border-radius:0.5rem; margin-bottom:0.5rem;"><strong>${adj.variable.toUpperCase()}</strong>: ${adj.adjustment.transportation || adj.adjustment.itinerary || adj.adjustment.logistics}</div>`).join('');
             }
 
-            function showCategory(cat) {
+            function showCategory(cat, e) {
+                highlight(e.target);
                 const container = document.getElementById('hubOptions');
-                container.innerHTML = options[cat].map(opt => `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--glass); padding:0.6rem; border-radius:0.5rem; margin-bottom:0.4rem;"><span>${opt.name}</span><button class="btn-action" style="width:auto; margin:0; padding:0.3rem 0.6rem; font-size:0.6rem;" onclick="book('${cat}', '${opt.name}', '${opt.price}')">Book</button></div>`).join('');
+                container.innerHTML = options[cat].map(opt => `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--glass); padding:0.6rem; border-radius:0.5rem; margin-bottom:0.4rem;"><span>${opt.name}</span><button class="btn-action" style="width:auto; margin:0; padding:0.3rem 0.6rem; font-size:0.6rem;" onclick="book('${cat}', '${opt.name}', '${opt.price}', event)">Book</button></div>`).join('');
             }
 
-            async function book(cat, name, price) {
+            async function book(cat, name, price, e) {
+                highlight(e.target);
                 addLog(`Booking ${name}...`, 'action');
                 const response = await fetch(`/api/book/${cat}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, price}) });
                 const res = await response.json();
@@ -297,18 +325,14 @@ def get_dashboard_html() -> str:
                 list.prepend(div);
             }
 
-            async function simulateConflict() {
+            async function simulateConflict(e) {
+                highlight(e.target);
                 addLog("ALERT: Louvre Closure Detected.", "error");
                 addLog("Initiating Self-Healing...", "action");
                 await new Promise(r => setTimeout(r, 1200));
                 addLog("Success: Rerouted to Orsay.", "success");
                 updateWallet('tickets', "Orsay (Healed)");
             }
-
-            function toggleAgent() { document.getElementById('agentPanel').classList.toggle('active'); }
-
-            // Init
-            addLog("System Online. Standing by.");
         </script>
     </body>
     </html>
